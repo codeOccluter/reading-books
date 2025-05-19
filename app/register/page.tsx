@@ -27,16 +27,31 @@ export default function RegisterPage() {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
+        watch
     } = useForm<FormData>({ resolver: zodResolver(schema) })
 
+    const avaterUrl = watch("avatarUrl")
+
     const [result, setResult] = useState("")
+    const [selectedImage, setSelectedImage] = useState<File | null>(null)
+    const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+    const [imageError, setImageError] = useState(false)
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        const file = e.target.files?.[0]
+        if(file) {
+            setSelectedImage(file)
+            setImagePreviewUrl(URL.createObjectURL(file))
+        }
+    }
 
     const onSubmit = async (data: FormData) => {
-        try{
 
+        try{
             const res = await fetch("/api/register", {
                 method: "POST",
-                headers: { "Content_Type": "application/json" },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             })
 
@@ -53,65 +68,78 @@ export default function RegisterPage() {
 
     return (
         <>
+        <div className={styles.wrapper}>
             <div className={styles.container}>
-                <h1 className={styles.title}>회원가입</h1>
-                <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-                    <div>
-                        {/* <Label className={styles.label}>이메일</Label> */}
-                        <Input 
-                            type="email" 
-                            placeholder="E-mail"
-                            {...register("email")} 
-                            className={styles.input} 
+                    <h1 className={styles.title}>회원가입</h1>
+                    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+                        <div>
+                            {/* <Label className={styles.label}>이메일</Label> */}
+                            <Input 
+                                type="email" 
+                                placeholder="E-mail"
+                                {...register("email")} 
+                                className={styles.input} 
+                            />
+                            {errors.email && <p className={styles.inputError}>{errors.email.message}</p>}
+                        </div>
+                        <div>
+                            <Input 
+                                type="password" 
+                                placeholder="Password"
+                                {...register("password")}
+                            />
+                            {errors.email && <p className={styles.inputError}>{errors.password?.message}</p>}
+                        </div>
+                        <div>
+                            <Input 
+                                {...register("name")} 
+                                placeholder="Name"
+                                className={styles.input}
+                            />
+                        </div>
+                        <div>
+                            <Input 
+                                {...register("nickname")} 
+                                placeholder="Nickname"
+                                className={styles.input}
+                            />
+                        </div>
+                        <div>
+                            <Input 
+                                {...register("birthday")} 
+                                placeholder="Birthday"
+                                className={styles.input}
+                            />
+                        </div>
+                        <div className={styles.avatarRow}>
+                            <label
+                                htmlFor="avatar-upload" className={styles.uploadWrapper}
+                            ><span className={styles.uploadText}>Image Upload</span></label>
+                            {imagePreviewUrl && (
+                                <img
+                                    src={imagePreviewUrl}
+                                    alt="Avatar Preview"
+                                    className={styles.avatarPreview}
+                                />
+                            )}
+                        </div>
+                        <input 
+                            type="file"
+                            accept="image/"
+                            className="hidden"
+                            id="avatar-upload"
+                            onChange={handleImageChange}
                         />
-                        {errors.email && <p className={styles.inputError}>{errors.email.message}</p>}
-                    </div>
-                    <div>
-                        {/* <Label className={styles.label}>비밀번호</Label> */}
-                        <Input 
-                            type="password" 
-                            placeholder="Password"
-                            {...register("password")}
-                        />
-                        {errors.email && <p className={styles.inputError}>{errors.password?.message}</p>}
-                    </div>
-                    <div>
-                        {/* <Label className={styles.label}>이름</Label> */}
-                        <Input 
-                            {...register("name")} 
-                            placeholder="Name"
-                            className={styles.input}
-                        />
-                    </div>
-                    <div>
-                        {/* <Label className={styles.label}>닉네임</Label> */}
-                        <Input 
-                            {...register("nickname")} 
-                            placeholder="Nickname"
-                            className={styles.input}
-                        />
-                    </div>
-                    <div>
-                        {/* <Label className={styles.label}>생년월일</Label> */}
-                        <Input 
-                            {...register("birthday")} 
-                            placeholder="Birthday"
-                            className={styles.input}
-                        />
-                    </div>
-                    <div>
-                        {/* <Label className={styles.label}>프로필 이미지</Label> */}
-                        <Input type="url" {...register("avatarUrl")} className={styles.input}/>
-                    </div>
 
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={styles.submitButton}
-                    >{isSubmitting ? "가입 중..." : "회원가입"}</Button>
-                </form>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className={styles.submitButton}
+                        >{isSubmitting ? "가입 중..." : "회원가입"}</Button>
+                    </form>
 
-                {result && <p className="mt-4 text-center font-semibold">{result}</p>}
+                    {result && <p className="mt-4 text-center font-semibold">{result}</p>}
+                </div>
             </div>
         </>
     )
