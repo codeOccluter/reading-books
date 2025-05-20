@@ -1,13 +1,19 @@
 "use client"
 
 import { useForm } from "react-hook-form"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { z } from "zod"
-
 import { zodResolver } from "@hookform/resolvers/zod"
+import api from "@/utils/axios/axios"
+
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+
+import { ko } from "date-fns/locale"
+import { format } from "date-fns"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import styles from "@/css/register/register.module.css"
 
 const schema = z.object({
@@ -15,7 +21,10 @@ const schema = z.object({
     password: z.string().min(6, "6자 이상 입력하세요."),
     name: z.string().min(1, "이름을 입력하세요."),
     nickname: z.string().optional(),
-    birthday: z.string().optional(),
+    birthday: z.string().optional().refine(
+        (value) => !value || /^\d{4}\.\d{2}\.\d{2}$/.test(value),
+        { message: "YYYY.MM.DD 형식으로 입력하세요." }
+    ),
     avatarUrl: z.string().url("유효한 이미지 URL을 입력하세요").optional()
 })
 
@@ -27,15 +36,18 @@ export default function RegisterPage() {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
-        watch
+        watch,
+        setValue,
     } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-    const avaterUrl = watch("avatarUrl")
-
     const [result, setResult] = useState("")
+
+    const [emailSent, setEmailSent] = useState(false)
+    const [emailVerified, setEmailVerified] = useState(false)
+    const [authCode, setAuthCode] = useState("")
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
-    const [imageError, setImageError] = useState(false)
+
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -43,6 +55,50 @@ export default function RegisterPage() {
         if(file) {
             setSelectedImage(file)
             setImagePreviewUrl(URL.createObjectURL(file))
+        }
+    }
+
+    const handleImageDelete = () => {
+
+        setSelectedImage(null)
+        setImagePreviewUrl(null)
+
+        const input = document.getElementById("avatar-upload") as HTMLInputElement
+        if(input) input.value = "";
+    }
+
+    const handleSendEmailAuth = async () => {
+
+        const email = watch("email")
+
+        if(!email) {
+            alert("이메일을 먼저 입력해주세요.")
+            return
+        }
+
+        try {
+
+            const res = await api.post("/send-email-code", { email })
+            setEmailSent(true)
+            alert("인증 메일이 발송되었습니다.")
+        }catch(error) {
+            alert("이메일 발송 실패")
+        }
+    }
+
+    const handleVerifyCode = async () => {
+        
+        try{
+
+            const res = await api.post("/verify-email-code", {
+                email: watch("email"),
+                code: authCode
+            })
+
+            setEmailVerified(true)
+            alert("이메일 인증 성공")
+        }catch(error) {
+            alert("인증코드가 올바르지 않습니다.")
         }
     }
 
@@ -70,77 +126,85 @@ export default function RegisterPage() {
         <>
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                    <h1 className={styles.title}>회원가입</h1>
-                    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-                        <div>
-                            {/* <Label className={styles.label}>이메일</Label> */}
+                <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                    <div className={styles.formRow}>
+                        <div className={styles.formLeft}>
                             <Input 
-                                type="email" 
+                                type="email"
                                 placeholder="E-mail"
-                                {...register("email")} 
-                                className={styles.input} 
+                                {...register("email")}
+                                className={styles.input}
                             />
                             {errors.email && <p className={styles.inputError}>{errors.email.message}</p>}
-                        </div>
-                        <div>
+
                             <Input 
-                                type="password" 
+                                type="password"
                                 placeholder="Password"
                                 {...register("password")}
+                                className={styles.input}
                             />
-                            {errors.email && <p className={styles.inputError}>{errors.password?.message}</p>}
-                        </div>
-                        <div>
+                            {errors.password && <p className={styles.inputError}>{errors.password?.message}</p>}
+
                             <Input 
+                                type="text"
                                 {...register("name")} 
                                 placeholder="Name"
                                 className={styles.input}
                             />
-                        </div>
-                        <div>
-                            <Input 
+                            <Input  
+                                type="text"
                                 {...register("nickname")} 
                                 placeholder="Nickname"
                                 className={styles.input}
                             />
-                        </div>
-                        <div>
-                            <Input 
-                                {...register("birthday")} 
-                                placeholder="Birthday"
+                            <Input
+                                type="text"
+                                placeholder="생년월일 (YYYY.MM.DD)"
+                                {...register("birthday")}
                                 className={styles.input}
                             />
+                            {errors.birthday && (<p className={styles.inputError}>{errors.birthday.message}</p>)}    
                         </div>
-                        <div className={styles.avatarRow}>
-                            <label
-                                htmlFor="avatar-upload" className={styles.uploadWrapper}
-                            ><span className={styles.uploadText}>Image Upload</span></label>
-                            {imagePreviewUrl && (
-                                <img
-                                    src={imagePreviewUrl}
-                                    alt="Avatar Preview"
-                                    className={styles.avatarPreview}
+
+                        <div className={styles.formRight}>
+                            <div className={styles.profileImageBox}>
+                                { imagePreviewUrl ? (
+                                    <img 
+                                        src={imagePreviewUrl}
+                                        alt="Avatar Preview"
+                                        className={styles.avatarPreview}
+                                    />
+                                ) : (
+                                    <div className={styles.avatarPlaceholder}>
+                                        <span className={styles.avatarIcon}>📷</span>
+                                    </div>
+                                )}
+                                <p className={styles.uploadLabel}>프로필 사진</p>
+                                <div className={styles.uploadControls}>
+                                    <label htmlFor="avatar-upload" className={styles.uploadButton}
+                                    ><span className={styles.uploadText}>{imagePreviewUrl ? "이미지 변경" : "이미지 업로드"}</span></label>
+                                    {imagePreviewUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={handleImageDelete}
+                                            className={styles.deleteButton}
+                                        >삭제</button>
+                                    )}
+                                </div>
+
+                                <input 
+                                    type="file"
+                                    accept="image/"
+                                    id="avatar-upload"
+                                    className="hidden"
+                                    onChange={handleImageChange}
                                 />
-                            )}
+                            </div>
                         </div>
-                        <input 
-                            type="file"
-                            accept="image/"
-                            className="hidden"
-                            id="avatar-upload"
-                            onChange={handleImageChange}
-                        />
-
-                        <Button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className={styles.submitButton}
-                        >{isSubmitting ? "가입 중..." : "회원가입"}</Button>
-                    </form>
-
-                    {result && <p className="mt-4 text-center font-semibold">{result}</p>}
-                </div>
+                    </div>
+                </form>
             </div>
+        </div>
         </>
     )
 }
