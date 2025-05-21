@@ -1,34 +1,12 @@
 "use client"
 
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react"
-import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import api from "@/utils/axios/axios"
+import { useForm } from "react-hook-form"
+import { useRegisterForm } from "../features/register/useRegisterForm" 
+import { RegisterFormData, registerSchema } from "../features/register/schema"
 
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-
-import { ko } from "date-fns/locale"
-import { format } from "date-fns"
-import DatePicker from "react-datepicker"
-import "react-datepicker/dist/react-datepicker.css"
 import styles from "@/css/register/register.module.css"
-
-const schema = z.object({
-    email: z.string().email("올바른 이메일을 입력하세요."),
-    password: z.string().min(6, "6자 이상 입력하세요."),
-    name: z.string().min(1, "이름을 입력하세요."),
-    nickname: z.string().optional(),
-    birthday: z.string().optional().refine(
-        (value) => !value || /^\d{4}\.\d{2}\.\d{2}$/.test(value),
-        { message: "YYYY.MM.DD 형식으로 입력하세요." }
-    ),
-    avatarUrl: z.string().url("유효한 이미지 URL을 입력하세요").optional()
-})
-
-type FormData = z.infer<typeof schema>
 
 export default function RegisterPage() {
 
@@ -38,105 +16,50 @@ export default function RegisterPage() {
         formState: { errors, isSubmitting },
         watch,
         setValue,
-    } = useForm<FormData>({ resolver: zodResolver(schema) })
+    } = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) })
 
-    const [result, setResult] = useState("")
-
-    const [emailSent, setEmailSent] = useState(false)
-    const [emailVerified, setEmailVerified] = useState(false)
-    const [authCode, setAuthCode] = useState("")
-    const [selectedImage, setSelectedImage] = useState<File | null>(null)
-    const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
-
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
-        const file = e.target.files?.[0]
-        if(file) {
-            setSelectedImage(file)
-            setImagePreviewUrl(URL.createObjectURL(file))
-        }
-    }
-
-    const handleImageDelete = () => {
-
-        setSelectedImage(null)
-        setImagePreviewUrl(null)
-
-        const input = document.getElementById("avatar-upload") as HTMLInputElement
-        if(input) input.value = "";
-    }
-
-    const handleSendEmailAuth = async () => {
-
-        const email = watch("email")
-
-        if(!email) {
-            alert("이메일을 먼저 입력해주세요.")
-            return
-        }
-
-        try {
-
-            const res = await api.post("/send-email-code", { email })
-            setEmailSent(true)
-            alert("인증 메일이 발송되었습니다.")
-        }catch(error) {
-            alert("이메일 발송 실패")
-        }
-    }
-
-    const handleVerifyCode = async () => {
-        
-        try{
-
-            const res = await api.post("/verify-email-code", {
-                email: watch("email"),
-                code: authCode
-            })
-
-            setEmailVerified(true)
-            alert("이메일 인증 성공")
-        }catch(error) {
-            alert("인증코드가 올바르지 않습니다.")
-        }
-    }
-
-    const onSubmit = async (data: FormData) => {
-
-        try{
-            const res = await fetch("/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            })
-
-            const resJson = await res.json()
-            if(res.ok) {
-                setResult("회원가입 성공!")
-            }else {
-                setResult(`오류: ${resJson.error} || "알 수 없는 오류"`)
-            }
-        }catch(e) {
-            setResult("서버 오류 발생")
-        }
-    }
+    const { registerStatus, registerFunction } = useRegisterForm(watch, setValue)
 
     return (
         <>
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                <form className={styles.form} onSubmit={handleSubmit(registerFunction.onSubmit)}>
                     <div className={styles.formRow}>
                         <div className={styles.formLeft}>
-                            <Input 
-                                type="email"
-                                placeholder="E-mail"
-                                {...register("email")}
-                                className={styles.input}
-                            />
-                            {errors.email && <p className={styles.inputError}>{errors.email.message}</p>}
-
+                            <div className={styles.email}>
+                                <Input 
+                                    type="email"
+                                    placeholder="example@example.exam"
+                                    {...register("email")}
+                                    onFocus={registerFunction.handleEmailInputFocusOn}
+                                    className={`
+                                        ${styles.emailInput}
+                                        ${registerStatus.emailError ? styles.inputErrorBorder : ""}
+                                        ${registerStatus.emailInputShake ? styles.shake : ""}   
+                                    `}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={registerFunction.handleSendEmailAuth}
+                                    className={styles.authButton}
+                                >인증코드 받기</button>
+                            </div>
+                            {registerStatus.emailError && (<p className={styles.emailErrorText}>{registerStatus.emailError}</p>)}
+                            <div className={styles.email}>
+                                <Input 
+                                    type="text"
+                                    placeholder="인증코드"
+                                    value={registerStatus.authCode}
+                                    onChange={(e) => registerStatus.setAuthCode(e.target.value)}
+                                    className={styles.emailInput}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={registerFunction.handleVerifyCode}
+                                    className={styles.authButton}
+                                >인증하기</button>
+                            </div>
                             <Input 
                                 type="password"
                                 placeholder="Password"
@@ -168,9 +91,9 @@ export default function RegisterPage() {
 
                         <div className={styles.formRight}>
                             <div className={styles.profileImageBox}>
-                                { imagePreviewUrl ? (
+                                { registerStatus.imagePreviewUrl ? (
                                     <img 
-                                        src={imagePreviewUrl}
+                                        src={registerStatus.imagePreviewUrl}
                                         alt="Avatar Preview"
                                         className={styles.avatarPreview}
                                     />
@@ -182,11 +105,11 @@ export default function RegisterPage() {
                                 <p className={styles.uploadLabel}>프로필 사진</p>
                                 <div className={styles.uploadControls}>
                                     <label htmlFor="avatar-upload" className={styles.uploadButton}
-                                    ><span className={styles.uploadText}>{imagePreviewUrl ? "이미지 변경" : "이미지 업로드"}</span></label>
-                                    {imagePreviewUrl && (
+                                    ><span className={styles.uploadText}>{registerStatus.imagePreviewUrl ? "이미지 변경" : "이미지 업로드"}</span></label>
+                                    {registerStatus.imagePreviewUrl && (
                                         <button
                                             type="button"
-                                            onClick={handleImageDelete}
+                                            onClick={registerFunction.handleImageDelete}
                                             className={styles.deleteButton}
                                         >삭제</button>
                                     )}
@@ -197,7 +120,7 @@ export default function RegisterPage() {
                                     accept="image/"
                                     id="avatar-upload"
                                     className="hidden"
-                                    onChange={handleImageChange}
+                                    onChange={registerFunction.handleImageChange}
                                 />
                             </div>
                         </div>

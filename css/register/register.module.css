@@ -26,6 +26,49 @@
     space-y-6;
 }
 
+.email {
+    @apply
+    flex gap-2
+    items-center
+    w-full
+}
+
+.emailInput {
+    @apply
+    flex-1
+}
+
+.emailErrorText {
+    @apply
+    text-red-500 text-sm
+}
+
+.inputErrorBorder {
+    @apply
+    border-red-500 focus:ring-red-500;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(0); }
+    25% { transform: translateX(-4px); }
+    50%{ transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+}
+
+.shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+.authButton {
+    @apply
+    px-3 py-2
+    bg-blue-500
+    text-white text-sm
+    rounded-md
+    hover:bg-blue-600 transition
+    whitespace-nowrap;
+}
+
 .input {
     @apply
     w-full
