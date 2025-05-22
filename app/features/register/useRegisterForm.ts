@@ -52,6 +52,7 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         const invalid = !email || !emailRegex.test(email);
 
         if (invalid) {
+            
             setEmailError(!email ? "이메일을 먼저 입력해주세요." : "유효한 이메일 형식을 입력해주세요.");
             setEmailInputShake(true);
             setTimeout(() => setEmailInputShake(false), 500);

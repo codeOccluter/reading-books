@@ -1,7 +1,7 @@
 .wrapper {
     @apply
     min-h-screen
-    flex 
+    flex flex-col
     items-center justify-center
     bg-gradient-to-br 
     from-blue-100 via-blue-50 to-white
@@ -196,4 +196,20 @@
     cursor-pointer
     hover:bg-red-600
     transition
+}
+
+.actionArea {
+    @apply
+    w-full
+    flex justify-center
+    mt-6; 
+}
+
+.submitButton {
+    @apply
+    px-6 py-3
+    bg-green-500
+    text-white font-semibold
+    rounded-md
+    hover:bg-green-600 transition;
 }

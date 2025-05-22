@@ -24,7 +24,7 @@ export default function RegisterPage() {
         <>
         <div className={styles.wrapper}>
             <div className={styles.container}>
-                <form className={styles.form} onSubmit={handleSubmit(registerFunction.onSubmit)}>
+                <form id="register-form" className={styles.form} onSubmit={handleSubmit(registerFunction.onSubmit)}>
                     <div className={styles.formRow}>
                         <div className={styles.formLeft}>
                             <div className={styles.email}>
@@ -126,6 +126,14 @@ export default function RegisterPage() {
                         </div>
                     </div>
                 </form>
+            </div>
+
+            <div className={styles.actionArea}>
+                <button
+                    type="submit"
+                    form="register-form"
+                    className={styles.submitButton}
+                >가입하기</button>
             </div>
         </div>
         </>

@@ -1,7 +1,5 @@
 import { z } from "zod"
 
-const strictEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
 export const registerSchema = z.object({
     email: z.string()
         .min(1, "이메일을 입력하세요."),
