@@ -1,0 +1,33 @@
+.header {
+    @apply
+    w-full
+    bg-white
+    shadow-md
+    fixed
+    top-0 left-0 z-50
+}
+
+.inner {
+    @apply
+    max-w-6xl
+    mx-auto
+    px-8 py-2
+    md:px-12 lg:px-16
+    flex justify-between items-center
+}
+
+.logo {
+    @apply
+    text-lg font-bold text-green-600
+    hover:text-green-700 transition
+}
+
+.nav {
+    @apply
+    flex gap-6
+}
+
+.navLink {
+    @apply
+    text-sm text-gray-700 hover:text-green-700 transition
+}

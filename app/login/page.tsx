@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { loginFormData, loginSchema } from "@/app/features/login/schema"
 import { useLoginForm } from "@/app/features/login/useLoginForm"
-
+import { signIn } from "next-auth/react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import styles from "@/css/login/login.module.css"
