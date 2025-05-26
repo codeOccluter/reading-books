@@ -2,23 +2,36 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useEffect } from "react"
 import { useRegisterForm } from "../features/register/useRegisterForm" 
 import { RegisterFormData, registerSchema } from "../features/register/schema"
 
 import { Input } from "@/components/ui/input"
 import styles from "@/css/register/register.module.css"
+import { PasswordStrength } from "../features/register/useRegisterForm"
 
 export default function RegisterPage() {
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting },
         watch,
         setValue,
     } = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) })
 
     const { registerStatus, registerFunction } = useRegisterForm(watch, setValue)
+
+    const password = watch("password")
+    const passwordConfirm = watch("passwordConfirm")
+    const isMatch = password === passwordConfirm
+
+    useEffect(() => {
+        if(password) {
+            registerStatus.setPasswordStrength(registerFunction.checkPasswordStrength(password))
+        }else {
+            registerStatus.setPasswordStrength(PasswordStrength.None)
+        }
+    }, [password])
 
     return (
         <>
@@ -60,24 +73,55 @@ export default function RegisterPage() {
                                     className={styles.authButton}
                                 >인증하기</button>
                             </div>
+                            {registerStatus.emailCodeVerified}
+                            <div className={styles.password}>
+                                <Input 
+                                    type={registerStatus.showPassword ? "text" : "password"}
+                                    placeholder="영문/숫자/특수문자 조합"
+                                    {...register("password")}
+                                    className={styles.input}
+                                />
+                                <button
+                                    type="button"
+                                    className={styles.passwordShow}
+                                    onClick={() => registerStatus.setShowPassword(!registerStatus.showPassword)}
+                                >{registerStatus.showPassword ? "🔒" : "👁‍🗨"}</button>
+                            </div>
+                            {password && (
+                                <p
+                                    className={`
+                                        text-sm mt-1
+                                        ${registerStatus.passwordStrength === "strong" && "text-green-600"}
+                                        ${registerStatus.passwordStrength === "medium" && "text-yellow-600"}
+                                        ${registerStatus.passwordStrength === "weak" && "text-red-600"}  
+                                    `}
+                                >
+                                    {registerStatus.passwordStrength === "strong" && "비밀번호 강도: 강함"}
+                                    {registerStatus.passwordStrength === "medium" && "비밀번호 강도: 보통"}
+                                    {registerStatus.passwordStrength === "weak" && "비밀번호 강도: 약함"}
+                                </p>
+                            )}
                             <Input 
-                                type="password"
-                                placeholder="Password"
-                                {...register("password")}
                                 className={styles.input}
+                                type="password"
+                                {...register("passwordConfirm")}
+                                placeholder="비밀번호 확인"
                             />
-                            {errors.password && <p className={styles.inputError}>{errors.password?.message}</p>}
-
+                            {passwordConfirm && (
+                                <p className={isMatch ? styles.passwordConfirmSuccess : styles.passwordConfirmError}>
+                                    {isMatch ? "비밀번호가 일치합니다." : "비밀번호가 일치하지 않습니다."}
+                                </p>
+                            )}
                             <Input 
                                 type="text"
                                 {...register("name")} 
-                                placeholder="Name"
+                                placeholder="이름"
                                 className={styles.input}
                             />
                             <Input  
                                 type="text"
                                 {...register("nickname")} 
-                                placeholder="Nickname"
+                                placeholder="닉네임"
                                 className={styles.input}
                             />
                             <Input
@@ -86,7 +130,6 @@ export default function RegisterPage() {
                                 {...register("birthday")}
                                 className={styles.input}
                             />
-                            {errors.birthday && (<p className={styles.inputError}>{errors.birthday.message}</p>)}    
                         </div>
 
                         <div className={styles.formRight}>

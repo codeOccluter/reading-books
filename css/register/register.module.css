@@ -48,6 +48,31 @@
     border-red-500 focus:ring-red-500;
 }
 
+.password {
+    @apply
+    relative w-full
+}
+
+.passwordConfirmSuccess {
+    @apply
+    text-sm
+    text-green-500
+}
+
+.passwordShow {
+    @apply
+    absolute
+    right-3
+    top-1/2 -translate-y-1/2
+    text-gray-500
+}
+
+.passwordConfirmError {
+    @apply
+    text-sm
+    text-red-500
+}
+
 @keyframes shake {
     0%, 100% { transform: translate(0); }
     25% { transform: translateX(-4px); }

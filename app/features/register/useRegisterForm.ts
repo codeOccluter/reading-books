@@ -2,15 +2,25 @@ import { useState } from "react"
 import api from "@/utils/axios/axios"
 import { RegisterFormData } from "./schema"
 
+export enum PasswordStrength {
+    Weak = "weak",
+    Medium = "medium",
+    Strong = "strong",
+    None = ""
+}
+
 export const useRegisterForm = (watch: any, setValue: any) => {
 
     const [result, setResult] = useState("")
     const [emailSent, setEmailSent] = useState(false)
     const [emailVerified, setEmailVerified] = useState(false)
     const [authCode, setAuthCode] = useState("")
+    const [emailCodeVerified, setEmailCodeVerified] = useState("")
     const [emailError, setEmailError] = useState("")
     const [emailInputShake, setEmailInputShake] = useState(false)
 
+    const [showPassword, setShowPassword] = useState(false)
+    const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>(PasswordStrength.None)
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
 
@@ -23,7 +33,12 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         emailInputShake,
         selectedImage,
         imagePreviewUrl,
-        setAuthCode
+        showPassword,
+        passwordStrength,
+        setAuthCode,
+        setShowPassword,
+        setPasswordStrength,
+        emailCodeVerified,
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,16 +94,15 @@ export const useRegisterForm = (watch: any, setValue: any) => {
     const handleVerifyCode = async () => {
         
         try{
-
             const res = await api.post("/email/verify-email-code", {
                 email: watch("email"),
                 code: authCode
             })
-
+    
+            setEmailCodeVerified(res.data.message)
             setEmailVerified(true)
-            alert("이메일 인증 성공")
-        }catch(error) {
-            alert("인증코드가 올바르지 않습니다.")
+        }catch(error){
+            console.log(error)
         }
     }
 
@@ -112,6 +126,17 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         }
     }
 
+    const checkPasswordStrength = (password: string): PasswordStrength => {
+
+        const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+        const mediumRegex = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/
+
+        if(strongRegex.test(password)) return PasswordStrength.Strong
+        if(mediumRegex.test(password)) return PasswordStrength.Medium
+        
+        return PasswordStrength.Weak
+    }
+
     const registerFunction = {
         handleImageChange,
         handleImageDelete,
@@ -119,6 +144,7 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         handleEmailInputFocusOn,
         handleVerifyCode,
         onSubmit,
+        checkPasswordStrength
     }
 
     return {

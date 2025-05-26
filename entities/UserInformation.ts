@@ -21,26 +21,29 @@ export class UserInformation {
     birthday!: Date
 
     @Column({ type: "text", nullable: true })
-    avatarUrl?: string
+    avatar_url?: string
 
     @CreateDateColumn()
-    createdAt!: Date
+    created_at!: Date
 
     @UpdateDateColumn()
-    updatedAt!: Date
+    updated_at!: Date
 
     @Column({ type: "datetime" })
-    lastLoginAt!: Date
+    last_login_at!: Date
 
     @Column({ default: false })
-    isDormant!: boolean
+    is_dormant!: boolean
 
     @Column({ type: "datetime", nullable: true })
-    dormantAt?: Date
+    dormant_at?: Date
 
     @Column({ default: false })
-    isDeleted!: boolean
+    is_deleted!: boolean
 
     @Column({ type: "datetime", nullable: true })
-    deletedAt?: Date
+    deleted_at?: Date
+
+    @Column({ type: "boolean", default: false })
+    is_admin!: boolean
 }
