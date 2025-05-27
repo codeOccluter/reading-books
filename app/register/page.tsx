@@ -73,8 +73,11 @@ export default function RegisterPage() {
                                     className={styles.authButton}
                                 >인증하기</button>
                             </div>
-                            {registerStatus.emailCodeVerified}
-                            <div className={styles.password}>
+                            <p className={`${registerStatus.emailVerified} ? ${styles.emailVerifiedCode} : ${styles.emailVerifiedCodeError}`}>
+                                {registerStatus.emailCodeVerified}
+                            </p>
+
+                            <div className={styles.passwordBirthday}>
                                 <Input 
                                     type={registerStatus.showPassword ? "text" : "password"}
                                     placeholder="영문/숫자/특수문자 조합"
@@ -124,12 +127,15 @@ export default function RegisterPage() {
                                 placeholder="닉네임"
                                 className={styles.input}
                             />
-                            <Input
-                                type="text"
-                                placeholder="생년월일 (YYYY.MM.DD)"
-                                {...register("birthday")}
-                                className={styles.input}
-                            />
+                            <div className={styles.passwordBirthday}>
+                                <Input
+                                    type="text"
+                                    placeholder="생년월일 (YYYY.MM.DD)"
+                                    {...register("birthday")}
+                                    className={styles.input} 
+                                    onChange={(e) => {}}
+                                />
+                            </div>
                         </div>
 
                         <div className={styles.formRight}>

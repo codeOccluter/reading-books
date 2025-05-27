@@ -18,6 +18,7 @@ export const useRegisterForm = (watch: any, setValue: any) => {
     const [emailCodeVerified, setEmailCodeVerified] = useState("")
     const [emailError, setEmailError] = useState("")
     const [emailInputShake, setEmailInputShake] = useState(false)
+    const [birthdayError, setBirthdayError] = useState("")
 
     const [showPassword, setShowPassword] = useState(false)
     const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>(PasswordStrength.None)
@@ -35,10 +36,12 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         imagePreviewUrl,
         showPassword,
         passwordStrength,
+        birthdayError,
+        emailCodeVerified,
         setAuthCode,
         setShowPassword,
         setPasswordStrength,
-        emailCodeVerified,
+        setBirthdayError,
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +78,6 @@ export const useRegisterForm = (watch: any, setValue: any) => {
             return;
         }
 
-
         try {
 
             const res = await api.post("/email/send-email-code", { email })
@@ -94,15 +96,23 @@ export const useRegisterForm = (watch: any, setValue: any) => {
     const handleVerifyCode = async () => {
         
         try{
-            const res = await api.post("/email/verify-email-code", {
+            const result = await api.post("/email/verify-email-code", {
                 email: watch("email"),
                 code: authCode
             })
-    
-            setEmailCodeVerified(res.data.message)
-            setEmailVerified(true)
-        }catch(error){
-            console.log(error)
+
+            if(result.status === 200) {
+
+                setEmailCodeVerified(result.data.message)
+                setEmailVerified(true)
+            }
+        }catch(error: any){
+            console.log(`error: ${error.response.data.error}`)
+
+            if(error.response?.data?.error) {
+                setEmailCodeVerified(error.response.data.error)
+                setEmailVerified(false)
+            }
         }
     }
 
@@ -135,6 +145,19 @@ export const useRegisterForm = (watch: any, setValue: any) => {
         if(mediumRegex.test(password)) return PasswordStrength.Medium
         
         return PasswordStrength.Weak
+    }
+
+    const validateBirthday = (value: string) => {
+
+        const regex = /^\d{4}\.\d{2}\.\d{2}$/
+
+        if(value === ""){
+            setBirthdayError("")
+        }else if(!regex.test(value)) {
+            setBirthdayError(`생년월일은 YYYY.MM.DD 형식으로 입력해주세요.`)
+        }else {
+            setBirthdayError("")
+        }
     }
 
     const registerFunction = {

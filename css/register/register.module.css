@@ -43,12 +43,24 @@
     text-red-500 text-sm
 }
 
+.emailVerifiedCode {
+    @apply
+    text-green-600 text-sm
+    mx-3
+    leading-tight
+}
+
+.emailVerifiedCodeError {
+    @apply
+    text-red-500 text-sm
+}
+
 .inputErrorBorder {
     @apply
     border-red-500 focus:ring-red-500;
 }
 
-.password {
+.passwordBirthday {
     @apply
     relative w-full
 }

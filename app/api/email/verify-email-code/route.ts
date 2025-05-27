@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
     if(!email || !code) {
         return NextResponse.json(
-            { message: `이메일과 인증코드가 필요합니다.` },
+            { error: `이메일과 인증코드가 필요합니다.` },
             { status: 400 },
         )
     }
@@ -16,19 +16,22 @@ export async function POST(req: Request) {
 
     if(!saveCode) {
         return NextResponse.json(
-            { message: `코드가 만료되었거나 존재하지 않습니다.` },
+            { error: `코드가 만료되었거나 존재하지 않습니다.` },
             { status: 410 },
         )
     }
 
     if(saveCode !== code) {
         return NextResponse.json(
-            { message: `인증코드가 올바르지 않습니다.` },
+            { error: `인증코드가 올바르지 않습니다.` },
             { status: 401 },
         )
     }
     
     removeCode(email)
 
-    return NextResponse.json({ message: `이메일 인증 성공` })
+    return NextResponse.json(
+        { message: `이메일 인증이 완료되었습니다.` },
+        { status: 200 }
+    )
 }
